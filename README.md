@@ -231,6 +231,15 @@ echo $env:BOT_USERNAME
      ```
    - Вариант B (если нужен просто запуск без Git): команды `git ...` не нужны, можно сразу собирать через CMake.
 
+7. **`regex_error(error_escape)` при запуске**
+   - Это ошибка старого шаблона regex в ранней версии бота.
+   - Обновите проект до последнего коммита и пересоберите:
+     ```powershell
+     cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows
+     cmake --build build --config Release
+     ```
+   - После обновления парсер Telegram-апдейтов использует корректный regex-режим.
+
 ---
 
 ## Linux (кратко)

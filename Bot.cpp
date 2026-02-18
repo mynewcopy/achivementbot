@@ -207,8 +207,7 @@ std::string Bot::handleCommand(long long chatId,
 }
 
 void Bot::processUpdate(const std::string& updateJson) {
-    static const std::regex updRe(R"("update_id"\s*:\s*(\d+).+?"message"\s*:\s*\{(.+?)\}\s*\})",
-                                  std::regex::extended);
+    static const std::regex updRe(R"("update_id"\s*:\s*(\d+).+?"message"\s*:\s*\{(.+?)\}\s*\})");
     static const std::regex chatIdRe(R"re("chat"\s*:\s*\{[^\}]*"id"\s*:\s*(-?\d+)[^\}]*"type"\s*:\s*"([^"]+)")re");
     static const std::regex userRe(R"re("from"\s*:\s*\{[^\}]*"id"\s*:\s*(\d+)[^\}]*"username"\s*:\s*"([^"]*)")re");
     static const std::regex textRe(R"re("text"\s*:\s*"([^"]*)")re");
