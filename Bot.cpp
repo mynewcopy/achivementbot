@@ -4,8 +4,8 @@
 
 #include <algorithm>
 #include <chrono>
-#include <iomanip>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include <regex>
 #include <sstream>
@@ -51,6 +51,33 @@ std::string trim(const std::string& s) {
     }
     const auto e = s.find_last_not_of(" \n\r\t");
     return s.substr(b, e - b + 1);
+}
+
+std::string decodeJsonString(const std::string& src) {
+    std::string out;
+    out.reserve(src.size());
+    bool esc = false;
+    for (char ch : src) {
+        if (!esc) {
+            if (ch == '\\') {
+                esc = true;
+            } else {
+                out.push_back(ch);
+            }
+            continue;
+        }
+        switch (ch) {
+            case 'n': out.push_back('\n'); break;
+            case 'r': out.push_back('\r'); break;
+            case 't': out.push_back('\t'); break;
+            case '"': out.push_back('"'); break;
+            case '\\': out.push_back('\\'); break;
+            case '/': out.push_back('/'); break;
+            default: out.push_back(ch); break;
+        }
+        esc = false;
+    }
+    return out;
 }
 
 } // namespace
@@ -175,7 +202,8 @@ std::string Bot::handleCommand(long long chatId,
             return "Использование: /status board_name";
         }
         boardName = tokens[1];
-    } else if (cmd.size() > 1 && cmd[0] == '/' && cmd.find_first_of("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") == 1) {
+    } else if (cmd.size() > 1 && cmd[0] == '/' &&
+               cmd.find_first_of("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") == 1) {
         boardName = cmd.substr(1);
     } else if (cmd.rfind("@" + botUsername, 0) == 0 && tokens.size() >= 2) {
         boardName = tokens[1];
@@ -207,23 +235,40 @@ std::string Bot::handleCommand(long long chatId,
 }
 
 void Bot::processUpdate(const std::string& updateJson) {
-    static const std::regex updRe(R"("update_id"\s*:\s*(\d+).+?"message"\s*:\s*\{(.+?)\}\s*\})");
+    static const std::regex updateIdRe(R"re("update_id"\s*:\s*(\d+))re");
     static const std::regex chatIdRe(R"re("chat"\s*:\s*\{[^\}]*"id"\s*:\s*(-?\d+)[^\}]*"type"\s*:\s*"([^"]+)")re");
     static const std::regex userRe(R"re("from"\s*:\s*\{[^\}]*"id"\s*:\s*(\d+)(?:[^\}]*"username"\s*:\s*"([^"]*)")?)re");
-    static const std::regex textRe(R"re("text"\s*:\s*"([^"]*)")re");
+    static const std::regex textRe(R"re("text"\s*:\s*"((?:\\.|[^"])*)")re");
 
-    std::smatch match;
-    std::string::const_iterator searchStart(updateJson.cbegin());
     const std::string botUsername = std::getenv("BOT_USERNAME") ? std::getenv("BOT_USERNAME") : "";
+    size_t pos = 0;
+    while (true) {
+        const size_t current = updateJson.find("\"update_id\"", pos);
+        if (current == std::string::npos) {
+            break;
+        }
+        const size_t next = updateJson.find("\"update_id\"", current + 11);
+        const std::string block = updateJson.substr(current,
+                                                    next == std::string::npos ? std::string::npos : next - current);
 
-    while (std::regex_search(searchStart, updateJson.cend(), match, updRe)) {
-        const long long updateId = std::stoll(match[1]);
-        std::string messageBlob = match[2];
+        std::smatch idMatch;
+        if (!std::regex_search(block, idMatch, updateIdRe)) {
+            pos = (next == std::string::npos) ? updateJson.size() : next;
+            continue;
+        }
+        const long long updateId = std::stoll(idMatch[1]);
+
+        if (block.find("\"message\"") == std::string::npos) {
+            offset_ = (std::max)(offset_, updateId + 1);
+            pos = (next == std::string::npos) ? updateJson.size() : next;
+            continue;
+        }
 
         std::smatch c, u, t;
-        if (!std::regex_search(messageBlob, c, chatIdRe) || !std::regex_search(messageBlob, u, userRe) ||
-            !std::regex_search(messageBlob, t, textRe)) {
-            searchStart = match.suffix().first;
+        if (!std::regex_search(block, c, chatIdRe) || !std::regex_search(block, u, userRe) ||
+            !std::regex_search(block, t, textRe)) {
+            offset_ = (std::max)(offset_, updateId + 1);
+            pos = (next == std::string::npos) ? updateJson.size() : next;
             continue;
         }
 
@@ -234,19 +279,19 @@ void Bot::processUpdate(const std::string& updateJson) {
         if (username.empty()) {
             username = "id_" + std::to_string(userId);
         }
-        std::string text = t[1];
-        std::replace(text.begin(), text.end(), '\\', ' ');
+        const std::string text = decodeJsonString(t[1]);
 
         const std::string reply = handleCommand(chatId, isPrivate, userId, username, text, botUsername);
         if (!reply.empty()) {
             sendMessage(chatId, reply);
         }
         offset_ = (std::max)(offset_, updateId + 1);
-        searchStart = match.suffix().first;
+        pos = (next == std::string::npos) ? updateJson.size() : next;
     }
 }
 
 void Bot::run() {
+    apiCall("deleteWebhook", "drop_pending_updates=false");
     std::cout << "Bot polling started...\n";
     while (true) {
         const std::string payload = "timeout=30&offset=" + std::to_string(offset_);
