@@ -53,17 +53,27 @@ git --version
 Если vcpkg уже установлен, пропустите клонирование.
 
 ```powershell
-git clone https://github.com/microsoft/vcpkg C:\vcpkg
-C:\vcpkg\bootstrap-vcpkg.bat
-C:\vcpkg\vcpkg install sqlite3:x64-windows curl:x64-windows
+git clone https://github.com/microsoft/vcpkg Q:\PROGRAMER33\zv\vcpkg
+Q:\PROGRAMER33\zv\vcpkg\bootstrap-vcpkg.bat
+Q:\PROGRAMER33\zv\vcpkg\vcpkg install sqlite3:x64-windows curl:x64-windows
 ```
 
 ### Шаг 3. Сконфигурируйте и соберите проект
 
 Из корня проекта (там где `CMakeLists.txt`):
 
+
+Если ваш `vcpkg` лежит в другом месте (как у вас `Q:\PROGRAMER33\zv`), просто подставляйте свой путь в `CMAKE_TOOLCHAIN_FILE`.
+
+Рекомендуемый вариант через переменную:
 ```powershell
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
+$env:VCPKG_ROOT="Q:/PROGRAMER33/zv/vcpkg"
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake --build build --config Release
+```
+
+```powershell
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=Q:/PROGRAMER33/zv/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
 cmake --build build --config Release
 ```
 
@@ -73,13 +83,13 @@ cmake --build build --config Release
 
 Пример для PowerShell:
 ```powershell
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=Q:/PROGRAMER33/zv/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
 cmake --build build --config Release
 ```
 
 Пример для `cmd.exe`:
 ```bat
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=Q:/PROGRAMER33/zv/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
 cmake --build build --config Release
 ```
 
