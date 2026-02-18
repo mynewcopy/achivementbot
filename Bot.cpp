@@ -209,7 +209,7 @@ std::string Bot::handleCommand(long long chatId,
 void Bot::processUpdate(const std::string& updateJson) {
     static const std::regex updRe(R"("update_id"\s*:\s*(\d+).+?"message"\s*:\s*\{(.+?)\}\s*\})");
     static const std::regex chatIdRe(R"re("chat"\s*:\s*\{[^\}]*"id"\s*:\s*(-?\d+)[^\}]*"type"\s*:\s*"([^"]+)")re");
-    static const std::regex userRe(R"re("from"\s*:\s*\{[^\}]*"id"\s*:\s*(\d+)[^\}]*"username"\s*:\s*"([^"]*)")re");
+    static const std::regex userRe(R"re("from"\s*:\s*\{[^\}]*"id"\s*:\s*(\d+)(?:[^\}]*"username"\s*:\s*"([^"]*)")?)re");
     static const std::regex textRe(R"re("text"\s*:\s*"([^"]*)")re");
 
     std::smatch match;
@@ -230,7 +230,10 @@ void Bot::processUpdate(const std::string& updateJson) {
         const long long chatId = std::stoll(c[1]);
         const bool isPrivate = c[2] == "private";
         const long long userId = std::stoll(u[1]);
-        const std::string username = u[2];
+        std::string username = u[2].matched ? u[2].str() : "";
+        if (username.empty()) {
+            username = "id_" + std::to_string(userId);
+        }
         std::string text = t[1];
         std::replace(text.begin(), text.end(), '\\', ' ');
 
