@@ -1,5 +1,7 @@
 #include "Database.h"
 
+#include <algorithm>
+#include <cctype>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
@@ -7,6 +9,16 @@
 #include <sstream>
 
 namespace {
+
+
+std::string normalizeUsername(std::string username) {
+    if (!username.empty() && username[0] == '@') {
+        username.erase(username.begin());
+    }
+    std::transform(username.begin(), username.end(), username.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    return username;
+}
 
 class Statement {
 public:
@@ -128,19 +140,21 @@ std::string Database::nowIso() const {
 }
 
 bool Database::upsertUser(long long telegramId, const std::string& username) {
+    const std::string normalized = normalizeUsername(username);
     Statement st(db_,
                  "INSERT INTO users(telegram_id, username, registered_at) VALUES(?, ?, ?) "
                  "ON CONFLICT(telegram_id) DO UPDATE SET username = excluded.username");
     sqlite3_bind_int64(st.get(), 1, telegramId);
-    sqlite3_bind_text(st.get(), 2, username.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(st.get(), 2, normalized.c_str(), -1, SQLITE_TRANSIENT);
     const auto now = nowIso();
     sqlite3_bind_text(st.get(), 3, now.c_str(), -1, SQLITE_TRANSIENT);
     return sqlite3_step(st.get()) == SQLITE_DONE;
 }
 
 std::optional<User> Database::getUserByUsername(const std::string& username) {
+    const std::string normalized = normalizeUsername(username);
     Statement st(db_, "SELECT telegram_id, username, registered_at FROM users WHERE username = ?");
-    sqlite3_bind_text(st.get(), 1, username.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(st.get(), 1, normalized.c_str(), -1, SQLITE_TRANSIENT);
     if (sqlite3_step(st.get()) == SQLITE_ROW) {
         return User{sqlite3_column_int64(st.get(), 0),
                     reinterpret_cast<const char*>(sqlite3_column_text(st.get(), 1)),

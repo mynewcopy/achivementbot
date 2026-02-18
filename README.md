@@ -127,7 +127,7 @@ echo $env:BOT_USERNAME
 1. В личке боту отправьте `/start`.
 2. Создайте пати: `/create_party`.
 3. Друзья тоже должны написать боту `/start`.
-4. Добавьте их: `/add_friends @friend1 @friend2`.
+4. Добавьте их: `/add_friends @foiebump @DGJeans @oceanceo`.
 5. Создайте доску: `/create_board daily_board`.
 6. Добавьте задачи: `/add_task daily_board Почистить почту`.
 7. Отметьте задачу: `/done <task_id>`.
@@ -165,6 +165,7 @@ echo $env:BOT_USERNAME
 ## Команды бота
 
 ### Личный чат (управление)
+- Username при добавлении можно писать в любом регистре (`@DGJeans` и `@dgjeans` эквивалентны).
 - `/start`
 - `/create_party`
 - `/add_friends @user1 @user2`
