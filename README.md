@@ -68,7 +68,7 @@ cmake --build build --config Release
 ```
 
 После сборки бинарник обычно здесь:
-- `build\Release\achivementbot.exe`
+- `build\Release\achievementbot.exe`
 
 ### Шаг 4. Вставьте токен и username (это главный момент)
 
@@ -91,7 +91,7 @@ echo $env:BOT_USERNAME
 ### Шаг 5. Запустите бота
 
 ```powershell
-.\build\Release\achivementbot.exe
+.\build\Release\achievementbot.exe
 ```
 
 Если всё ок — бот начнёт long polling (`getUpdates`).
@@ -118,10 +118,10 @@ echo $env:BOT_USERNAME
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Run achivementbot",
+      "name": "Run achievementbot",
       "type": "cppvsdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/Release/achivementbot.exe",
+      "program": "${workspaceFolder}/build/Release/achievementbot.exe",
       "cwd": "${workspaceFolder}",
       "environment": [
         { "name": "BOT_TOKEN", "value": "<YOUR_BOT_TOKEN>" },
@@ -186,7 +186,7 @@ cmake -S . -B build
 cmake --build build -j
 export BOT_TOKEN="<ваш_токен_от_BotFather>"
 export BOT_USERNAME="<username_бота_без_@>"
-./build/achivementbot
+./build/achievementbot
 ```
 
 База данных SQLite создаётся рядом с бинарником: `achievementbot.db`.
