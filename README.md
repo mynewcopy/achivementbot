@@ -2,67 +2,141 @@
 
 Telegram-бот для команды друзей с пати-логикой, досками задач и общей серией.
 
-## Что именно нужно взять из Telegram и куда вставлять
+## Что взять из Telegram (обязательно)
 
-### 1) Создать бота в BotFather и получить **токен**
-1. В Telegram откройте `@BotFather`.
-2. Выполните `/newbot` и задайте имя/username бота.
-3. BotFather пришлёт строку вида:
+### 1) Получить токен через BotFather
+1. Откройте в Telegram `@BotFather`.
+2. Команда `/newbot`.
+3. Задайте имя и `username`.
+4. Скопируйте токен вида:
    `1234567890:AAHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
 
-Это и есть **BOT_TOKEN**.
+Это значение для переменной `BOT_TOKEN`.
 
-### 2) Взять username бота (без `@`)
-Если бот называется `@my_party_bot`, то значение переменной:
+### 2) Взять username бота без `@`
+Если бот `@my_party_bot`, то:
 - `BOT_USERNAME=my_party_bot`
 
-### 3) Экспортировать переменные окружения перед запуском
-```bash
-export BOT_TOKEN="1234567890:AAHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-export BOT_USERNAME="my_party_bot"
-```
-
-> `BOT_USERNAME` нужен для режима вызова в группе через `@BotUsername board_name`.
-
 ---
 
-## Быстрый запуск (шаг за шагом)
+## ПОЛНЫЙ ГАЙД ДЛЯ WINDOWS (VS Code)
 
-### 1) Установить зависимости (Linux)
-Нужны: CMake, компилятор C++17, SQLite3, libcurl.
+Ниже — путь «с нуля» именно для Windows, если вы уже открыли папку проекта в VS Code.
 
-### 2) Собрать проект
-```bash
-cmake -S . -B build
-cmake --build build -j
+### Шаг 0. Что должно быть установлено
+
+Установите (если ещё не стоит):
+1. **Visual Studio Code**
+2. **Git for Windows**
+3. **CMake** (добавить в PATH)
+4. **Visual Studio 2022 Build Tools**
+   - компонент `Desktop development with C++`
+   - MSVC toolchain + Windows SDK
+5. **vcpkg** (для библиотек `sqlite3` и `curl`)
+
+> Альтернатива: можно собирать через MinGW, но для этого проекта проще и стабильнее через MSVC + vcpkg.
+
+### Шаг 1. Откройте правильный терминал в VS Code
+
+В VS Code:
+- `Terminal` → `New Terminal`
+- лучше выбрать **PowerShell**
+
+Проверьте инструменты:
+```powershell
+cmake --version
+git --version
 ```
 
-### 3) Запустить бота
-```bash
-export BOT_TOKEN="<ваш_токен_от_BotFather>"
-export BOT_USERNAME="<username_бота_без_@>"
-./build/achivementbot
+### Шаг 2. Установите зависимости через vcpkg
+
+Если vcpkg уже установлен, пропустите клонирование.
+
+```powershell
+git clone https://github.com/microsoft/vcpkg C:\vcpkg
+C:\vcpkg\bootstrap-vcpkg.bat
+C:\vcpkg\vcpkg install sqlite3:x64-windows curl:x64-windows
 ```
 
-После запуска бот начинает long polling (`getUpdates`).
+### Шаг 3. Сконфигурируйте и соберите проект
 
-### 4) Первичная настройка в Telegram
-1. Напишите боту в **личку**: `/start` (это регистрация пользователя).
+Из корня проекта (там где `CMakeLists.txt`):
+
+```powershell
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake --build build --config Release
+```
+
+После сборки бинарник обычно здесь:
+- `build\Release\achivementbot.exe`
+
+### Шаг 4. Вставьте токен и username (это главный момент)
+
+Вы писали: «куда что вставлять». На Windows это делается перед запуском в том же терминале:
+
+```powershell
+$env:BOT_TOKEN="1234567890:AAHxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+$env:BOT_USERNAME="my_party_bot"
+```
+
+- `BOT_TOKEN` = строка от BotFather
+- `BOT_USERNAME` = username бота **без `@`**
+
+Проверка:
+```powershell
+echo $env:BOT_TOKEN
+echo $env:BOT_USERNAME
+```
+
+### Шаг 5. Запустите бота
+
+```powershell
+.\build\Release\achivementbot.exe
+```
+
+Если всё ок — бот начнёт long polling (`getUpdates`).
+
+### Шаг 6. Первый запуск в Telegram (обязательно)
+
+1. В личке боту отправьте `/start`.
 2. Создайте пати: `/create_party`.
-3. Добавьте друзей (они тоже должны написать боту `/start`):
-   `/add_friends @friend1 @friend2`
-4. Создайте доску:
-   `/create_board daily_board`
-5. Добавьте задачи:
-   `/add_task daily_board Почистить почту`
-6. Отметьте выполнение:
-   `/done <task_id>`
-7. Посмотреть агрегированный статус:
-   `/status daily_board`
+3. Друзья тоже должны написать боту `/start`.
+4. Добавьте их: `/add_friends @friend1 @friend2`.
+5. Создайте доску: `/create_board daily_board`.
+6. Добавьте задачи: `/add_task daily_board Почистить почту`.
+7. Отметьте задачу: `/done <task_id>`.
+8. Посмотрите статус: `/status daily_board`.
 
 ---
 
-## В каком чате какие команды работают
+## Если хотите запуск одной кнопкой в VS Code
+
+Создайте `.vscode/launch.json` (опционально) и добавьте env:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run achivementbot",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/Release/achivementbot.exe",
+      "cwd": "${workspaceFolder}",
+      "environment": [
+        { "name": "BOT_TOKEN", "value": "<YOUR_BOT_TOKEN>" },
+        { "name": "BOT_USERNAME", "value": "<YOUR_BOT_USERNAME>" }
+      ]
+    }
+  ]
+}
+```
+
+Тогда не нужно каждый раз вручную делать `$env:...`.
+
+---
+
+## Команды бота
 
 ### Личный чат (управление)
 - `/start`
@@ -87,7 +161,32 @@ export BOT_USERNAME="<username_бота_без_@>"
 
 ---
 
-## Полезные замечания
-- База данных SQLite создаётся рядом с бинарником: `achievementbot.db`.
-- Если при запуске видите `Set BOT_TOKEN environment variable`, значит вы не выставили `BOT_TOKEN`.
-- Для корректной работы приглашений у участников должен быть выставлен Telegram `@username`.
+## Частые проблемы на Windows
+
+1. **`Set BOT_TOKEN environment variable`**
+   - Не задан `BOT_TOKEN` в текущем терминале.
+
+2. **`curl/sqlite3 not found` при CMake configure**
+   - Не подключили `vcpkg` toolchain в команде `cmake -S ...`.
+
+3. **Бот не отвечает в группе**
+   - Проверьте, что используете `@BotUsername board_name` или `/status board_name`.
+   - Убедитесь, что пользователь имеет доступ к доске (состоит в нужной пати).
+
+4. **Не добавляется друг по username**
+   - Друг должен сначала написать боту `/start` в личке.
+   - У друга должен быть установлен Telegram `@username`.
+
+---
+
+## Linux (кратко)
+
+```bash
+cmake -S . -B build
+cmake --build build -j
+export BOT_TOKEN="<ваш_токен_от_BotFather>"
+export BOT_USERNAME="<username_бота_без_@>"
+./build/achivementbot
+```
+
+База данных SQLite создаётся рядом с бинарником: `achievementbot.db`.
