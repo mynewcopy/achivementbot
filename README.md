@@ -67,6 +67,22 @@ cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.c
 cmake --build build --config Release
 ```
 
+
+> ⚠️ В Windows PowerShell 5.1 оператор `&&` не поддерживается.
+> Запускайте команды по одной строке (или используйте `;`).
+
+Пример для PowerShell:
+```powershell
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake --build build --config Release
+```
+
+Пример для `cmd.exe`:
+```bat
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows
+cmake --build build --config Release
+```
+
 После сборки бинарник обычно здесь:
 - `build\Release\achievementbot.exe`
 
