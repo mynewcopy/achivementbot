@@ -239,7 +239,7 @@ void Bot::processUpdate(const std::string& updateJson) {
         if (!reply.empty()) {
             sendMessage(chatId, reply);
         }
-        offset_ = std::max(offset_, updateId + 1);
+        offset_ = (std::max)(offset_, updateId + 1);
         searchStart = match.suffix().first;
     }
 }
