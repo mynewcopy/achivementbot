@@ -203,6 +203,18 @@ echo $env:BOT_USERNAME
    - Друг должен сначала написать боту `/start` в личке.
    - У друга должен быть установлен Telegram `@username`.
 
+
+5. **`CommandNotFoundException` при `./build/Release/achivementbot.exe`**
+   - Опечатка в имени: правильно `achievementbot.exe` (есть **e** после `v`).
+   - Запускайте так:
+     ```powershell
+     .\build\Release\achievementbot.exe
+     ```
+   - Если не уверены, проверьте файл:
+     ```powershell
+     Get-ChildItem .\build\Release
+     ```
+
 ---
 
 ## Linux (кратко)
