@@ -215,6 +215,22 @@ echo $env:BOT_USERNAME
      Get-ChildItem .\build\Release
      ```
 
+6. **`fatal: not a git repository (or any of the parent directories): .git`**
+   - Вы открыли папку, где нет `.git` (например, распакованный архив/экспорт без истории Git).
+   - Проверьте, что вы в корне репозитория:
+     ```powershell
+     Get-ChildItem -Force
+     ```
+     Если в списке нет `.git`, это не git-репозиторий.
+   - Вариант A (рекомендуется): заново клонировать проект и открыть именно эту папку:
+     ```powershell
+     cd Q:\PROGRAMER33
+     git clone <URL_ВАШЕГО_РЕПО> achievementbot
+     cd .\achievementbot
+     git status
+     ```
+   - Вариант B (если нужен просто запуск без Git): команды `git ...` не нужны, можно сразу собирать через CMake.
+
 ---
 
 ## Linux (кратко)
